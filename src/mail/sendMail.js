@@ -1,22 +1,13 @@
 const transporter = require("./transporter");
 const logger = require("../utils/logger");
 
-const sendMail = async ({ to, subject, message }) => {
-  const mailOptions = {
+module.exports = async ({ to, subject, message }) => {
+  await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,
     subject,
     text: message,
-  };
+  });
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email sent to ${to} (messageId=${info.messageId})`);
-    return info;
-  } catch (err) {
-    logger.error(`Failed to send email to ${to}: ${err.message}`);
-    throw err;
-  }
+  logger.info(`Email sent to ${to}`);
 };
-
-module.exports = { sendMail };
