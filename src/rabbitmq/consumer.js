@@ -1,10 +1,8 @@
 const amqp = require("amqplib");
-const logger = require("../utils/logger");
 const sendMail = require("../mail/sendMail");
+const logger = require("../utils/logger");
 
-const RABBIT_URL = "amqp://localhost";
-const EXCHANGE = "email.events";
-const ROUTING_KEY = "email.send";
+const RABBIT_URL = "amqp://rabbitmq";
 const QUEUE = "email_queue";
 
 async function startEmailConsumer() {
@@ -12,12 +10,9 @@ async function startEmailConsumer() {
     const connection = await amqp.connect(RABBIT_URL);
     const channel = await connection.createChannel();
 
-    await channel.assertExchange(EXCHANGE, "topic", { durable: true });
-
     await channel.assertQueue(QUEUE, { durable: true });
-    await channel.bindQueue(QUEUE, EXCHANGE, ROUTING_KEY);
 
-    logger.info(`Waiting for messages in queue: ${QUEUE}`);
+    logger.info(`Waiting for messages on queue: ${QUEUE}`);
 
     channel.consume(QUEUE, async (msg) => {
       if (!msg) return;
@@ -32,14 +27,14 @@ async function startEmailConsumer() {
         });
 
         channel.ack(msg);
-        logger.info(`Email sent to ${data.to} (RabbitMQ)`);
+        logger.info(`Email sent to ${data.to}`);
       } catch (err) {
-        logger.error(err);
+        logger.error("Failed to process message", err);
         channel.nack(msg, false, false);
       }
     });
   } catch (err) {
-    logger.error("RabbitMQ connection failed", err);
+    logger.error("RabbitMQ consumer failed", err);
   }
 }
 
