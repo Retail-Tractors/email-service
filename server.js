@@ -2,7 +2,7 @@ const env = require("dotenv");
 env.config({ path: "./.env" });
 const app = require("./src/app.js");
 const logger = require("./src/utils/logger.js");
-const { startEmailConsumer } = require("./rabbitmq/consumer");
+const { startEmailConsumer } = require('./src/rabbitmq/consumer');
 
 const PORT = process.env.PORT;
 
