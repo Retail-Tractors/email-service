@@ -4,6 +4,8 @@ const logger = require("../utils/logger");
 
 const RABBIT_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
 const QUEUE_NAME = "email_queue";
+const EXCHANGE = "email.events";
+const ROUTING_KEY = "email.send";
 const RETRY_INTERVAL = 5000;
 
 async function startEmailConsumer() {
@@ -12,7 +14,9 @@ async function startEmailConsumer() {
       const connection = await amqp.connect(RABBIT_URL);
       const channel = await connection.createChannel();
 
+      await channel.assertExchange(EXCHANGE, "topic", { durable: true });
       await channel.assertQueue(QUEUE_NAME, { durable: true });
+      await channel.bindQueue(QUEUE_NAME, EXCHANGE, ROUTING_KEY);
 
       logger.info(`Waiting for messages in queue: ${QUEUE_NAME}`);
 
@@ -21,7 +25,7 @@ async function startEmailConsumer() {
 
         try {
           const event = JSON.parse(msg.content.toString());
-          logger.info("Event received", event);
+          logger.info("Email event received", event);
 
           await sendMail(event);
 
