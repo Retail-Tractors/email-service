@@ -1,7 +1,11 @@
 const transporter = require("./transporter");
 const logger = require("../utils/logger");
 
-module.exports = async ({ to, subject, message }) => {
+async function sendMail({ to, subject, message }) {
+  if (!to || !subject || !message) {
+    throw new Error("to, subject and message are required");
+  }
+
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,
@@ -9,5 +13,7 @@ module.exports = async ({ to, subject, message }) => {
     text: message,
   });
 
-  logger.info(`Email sent to ${to}`);
-};
+  logger.info("Email sent", { to, subject });
+}
+
+module.exports = { sendMail };

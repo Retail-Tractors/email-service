@@ -1,5 +1,5 @@
 const amqp = require("amqplib");
-const sendMail = require("../mail/sendMail");
+const { sendMail } = require("../mail/sendMail");
 const logger = require("../utils/logger");
 
 const RABBIT_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
@@ -13,6 +13,7 @@ async function startEmailConsumer() {
     try {
       const connection = await amqp.connect(RABBIT_URL);
       const channel = await connection.createChannel();
+      channel.prefetch(1); // Process one message at a time
 
       await channel.assertExchange(EXCHANGE, "topic", { durable: true });
       await channel.assertQueue(QUEUE_NAME, { durable: true });
@@ -25,9 +26,20 @@ async function startEmailConsumer() {
 
         try {
           const event = JSON.parse(msg.content.toString());
-          logger.info("Email event received", event);
+          logger.info("Email event received", {
+            to: event.to,
+            routingKey: ROUTING_KEY,
+          });
 
-          await sendMail(event);
+          if (!event.to || !event.subject || !event.message) {
+            throw new Error("Invalid email event payload");
+          }
+
+          await sendMail({
+            to: event.to,
+            subject: event.subject,
+            message: event.message,
+          });
 
           channel.ack(msg);
         } catch (err) {
