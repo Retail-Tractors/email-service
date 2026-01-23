@@ -1,0 +1,109 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Retail Tractors - Email Service",
+    "description": "Email microservice API. This service also consumes email events asynchronously via RabbitMQ.",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Emails",
+      "description": "Transactional email operations"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/emails/": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Send transactional email",
+        "description": "Sends a transactional email. All requests and errors are logged using Pino.",
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request – missing or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/Email"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Email": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "type": "string",
+          "example": "user@email.com"
+        },
+        "subject": {
+          "type": "string",
+          "example": "Confirmação de reserva"
+        },
+        "message": {
+          "type": "string",
+          "example": "A sua reserva foi confirmada"
+        }
+      }
+    },
+    "SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "Email sent"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "to, subject and message are required"
+        }
+      }
+    }
+  }
+}
